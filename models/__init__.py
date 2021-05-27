@@ -1,0 +1,1 @@
+from .resnet_18 import get_model
