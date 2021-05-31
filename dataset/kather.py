@@ -12,11 +12,12 @@ class Kather(torch.utils.data.Dataset):
     Custom dataset class to manage images and labels
     """
 
-    def __init__(self, args, mode='train'):
+    def __init__(self, args, mode='train', ext='tif'):
         super(Kather, self).__init__()
 
         self.data = args.data
         self.mode = mode
+        self.ext = ext
 
         self.rescale_size = args.rescale_size
         self.crop_size = args.crop_size
@@ -27,7 +28,7 @@ class Kather(torch.utils.data.Dataset):
         # Load images and labels (according to self.mode.upper() being [TRAIN/TEST/VAL])
         for subdir in glob(join(self.data, f'*_{self.mode.upper()}')):
             label = int(subdir.split('/')[-1].split('_')[0][-1]) - 1
-            images_files = glob(join(subdir, "*.tif"))
+            images_files = glob(join(subdir, f"*.{self.ext}"))
             self.images.extend(images_files)
             self.labels.extend([label, ] * len(images_files))
 
@@ -36,7 +37,6 @@ class Kather(torch.utils.data.Dataset):
             'train': Compose([
                 Resize(self.rescale_size),
                 RandomCrop(self.crop_size),
-                RandomHorizontalFlip(p=0.5),
                 ToTensor(),
                 Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
             ]),
