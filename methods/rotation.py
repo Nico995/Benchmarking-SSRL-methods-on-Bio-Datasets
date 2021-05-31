@@ -1,10 +1,7 @@
-from matplotlib import pyplot as plt
-
-from utils.metrics import accuracy
-from utils import batch_to_plottable_image
-from transforms import DiscreteRandomRotation
-
 import torch
+
+from transforms import DiscreteRandomRotation
+from utils.metrics import accuracy
 
 
 def train_rotation(model, img, lbl, optimizer, criterion):
