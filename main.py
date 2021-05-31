@@ -3,17 +3,17 @@ import numpy as np
 from tensorboardX import SummaryWriter
 
 from torch.optim import SGD
-from torch.nn import CrossEntropyLoss
+from torch.nn import CrossEntropyLoss, MSELoss
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import MultiStepLR
 
-from dataset import Kather
+from dataset import Kather, Pedestrians
 from parser import load_args
-from methods import train_rotation, val_rotation, train_jigsaw
+from methods import train_rotation, val_rotation, train_jigsaw, val_jigsaw, train_autoencoder, val_autoencoder
 from utils.custom_exceptions import *
 from utils import dataset_name
 
-from models import resnet_18
+from models import Rotation, Jigsaw, AutoEncoder
 
 '''
 Since this project focuses on benchmarking different training methods and different dataset, we need modularity. 
@@ -22,28 +22,37 @@ We will assign a python object (dataset, training loop, ...) to each possible va
 '''
 # These names must correspond to the name of the dataset root folder in the filesystem
 dataset = {
-    'kather': Kather
+    'kather': Kather,
+    'pedestrians': Pedestrians,
+}
+
+image_extension_by_dataset = {
+    'kather': 'tif',
+    'pedestrians': 'pgm'
 }
 
 train_by_method = {
     'rotation': train_rotation,
     'jigsaw': train_jigsaw,
+    'autoencoder': train_autoencoder,
 }
 
 val_by_method = {
     'rotation': val_rotation,
-    'jigsaw': None  # TODO: fix
+    'jigsaw': val_jigsaw,
+    'autoencoder': val_autoencoder,
 }
 
-classes_by_method = {
-    'rotation': 4,
-    'jigsaw': 100,
+criterion_by_method = {
+    'rotation': CrossEntropyLoss(),
+    'jigsaw': CrossEntropyLoss(),
+    'autoencoder': MSELoss()
 }
 
 model_by_method = {
-    'rotation': resnet_18.get_model(out_features=classes_by_method['rotation']).cuda(),
-    'jigsaw': resnet_18.get_model(out_features=classes_by_method['rotation']).cuda(),  # TODO: Fix
-
+    'rotation': Rotation,
+    'jigsaw': Jigsaw,
+    'autoencoder': AutoEncoder,
 }
 
 
@@ -58,8 +67,9 @@ def main():
 
     # Initialize data_loader structures
     try:
-        ds_train = dataset[dataset_name(args.data)](args)
-        ds_val = dataset[dataset_name(args.data)](args, mode='val')
+        ext = image_extension_by_dataset[dataset_name(args.data)]
+        ds_train = dataset[dataset_name(args.data)](args, ext=ext)
+        ds_val = dataset[dataset_name(args.data)](args, mode='val', ext=ext)
     except KeyError:
         raise DatasetNotSupportedError(dataset_name(args.data))
 
@@ -72,7 +82,10 @@ def main():
         train_ = train_by_method[args.method]
         val_ = val_by_method[args.method]
         # Get model
-        model = model_by_method[args.method]
+        model = model_by_method[args.method]().cuda()
+
+        # Get criterion
+        criterion = criterion_by_method[args.method]
     except KeyError:
         raise MethodNotSupportedError(args.method)
 
@@ -81,7 +94,6 @@ def main():
 
     # Load learning rate scheduler
     lr_scheduler = MultiStepLR(optimizer, [80, 100], 0.1)
-    criterion = CrossEntropyLoss()
 
     # Tensorboard writer
     # writer = SummaryWriter(comment=f'_{args.method}_{args.epochs}ep_{args.batch_size}bs_{args.data.split("/")[-2]}')
