@@ -379,3 +379,5 @@ Thumbs.db
 /data
 *.ipynb
 # End of https://www.toptal.com/developers/gitignore/api/intellij,intellij+all,intellij+iml,python,jupyternotebooks
+
+/notes
