@@ -1,5 +1,6 @@
-available_methods = ['rotation']
-available_datasets = ['kather']
+available_methods = ['rotation', 'jigsaw', 'autoencoder']
+available_datasets = ['pedestrians', 'kather']
+available_backbones = ['18', '34']
 
 
 class MethodNotSupportedError(Exception):
@@ -15,3 +16,8 @@ class DatasetNotSupportedError(Exception):
                        f"List of available datasets:\n\t{', '.join(available_datasets)}"
         super().__init__(self.message)
 
+
+class BackboneVersionNotSupportedError(Exception):
+    def __init__(self, version):
+        self.message = f"Resnet '{version}' is not supported. " \
+                       f"List of available models:\n\t{', '.join(available_backbones)}"
