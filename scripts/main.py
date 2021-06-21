@@ -1,8 +1,13 @@
+import glob
+import os
+from datetime import datetime
+
 from tensorboardX import SummaryWriter
-from torch.optim import Adam
+from torch.optim import Adam, SGD
 from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import DataLoader
 
+from models.downstream_classification import DownstreamClassification
 from parser import load_args
 from utils import dataset_name, config as cf
 from utils.custom_exceptions import *
@@ -15,6 +20,7 @@ To avoid endless chains of if-else, we will make great use of the dictionary str
 We will assign a python object (dataset, training loop, ...) to each possible value a user can input in the args.
 '''
 
+# TODO: write checkpointing just for last fc (classifier) in case of downstream task
 
 def main():
     """
@@ -38,34 +44,50 @@ def main():
 
     # if available
     try:
-        # Get training method
-        train_ = cf.train_by_method[args.method]
-        val_ = cf.val_by_method[args.method]
-
-        # Get model
+        # The number of classes for the model need to be the one corresponding to the actual method.
+        # - If we're in pretext settings, it comes without saying
+        # - If we're in downstream settings, we need FIRST to load the old model with the expected number of classes...
+        # ...and THEN extract the pretext and attach it a fc with the number of classes proper to the dataset
         num_classes = cf.classes_by_method[args.method]
-        model = cf.model_by_method[args.method](num_classes=num_classes).cuda()
+        weights = cf.weights_by_method[args.method]
+        model = cf.model_by_method[args.method](num_classes=num_classes, weights=weights)
 
-        # Get pretrained model if evaluating downstream task accuracy
-        weights = f'../models/pretrained_weights/{dataset_name(args.data)}_{args.method}.pth'
+        if args.level == 'downstream':
+            # if downstream, we only need the backbone, DownstreamClassification will remove the last fc
+            # Layer and attach a new classification head by itself
+            model = DownstreamClassification(model, num_classes=cf.classes_by_method['supervised'])
 
-        # Get criterion
-        criterion = cf.criterion_by_method[args.method]
+            # Get training method
+            train_ = cf.train_by_method['supervised']
+            val_ = cf.val_by_method['supervised']
+            criterion = cf.criterion_by_method['supervised']
+
+        else:
+            # Get training method
+            train_ = cf.train_by_method[args.method]
+            val_ = cf.val_by_method[args.method]
+            criterion = cf.criterion_by_method[args.method]
+
+        model = model.cuda()
     except KeyError:
         raise MethodNotSupportedError(args.method)
 
     # Load optimizer
-    # optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.9)
-    optimizer = Adam(model.parameters(), args.lr)
+    optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.9)
 
     # Load learning rate scheduler
     lr_scheduler = MultiStepLR(optimizer, [80, 100], 0.1)
 
+    # Create folder to save checkpoints
+    checkpoint_folder = f"{args.level}-{dataset_name(args.data)}-{args.method}_" + \
+                        datetime.now().strftime(f"%Y-%m-%d_%H:%M:%S")
+    os.makedirs(os.path.join(args.checkpoint_path, checkpoint_folder), exist_ok=True)
+
     # Tensorboard writer
     # writer = SummaryWriter(comment=f'_{args.method}_{args.epochs}ep_{args.batch_size}bs_{args.data.split("/")[-2]}')
-    writer = SummaryWriter(logdir='dump/asd')  # TODO: remove
+    writer = SummaryWriter(logdir=os.path.join(args.checkpoint_path, checkpoint_folder))
 
-    main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_scheduler, criterion, writer)
+    main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_scheduler, criterion, writer, checkpoint_folder)
 
 
 if __name__ == '__main__':
