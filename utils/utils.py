@@ -7,8 +7,8 @@ def class_idx_to_name(idx):
     return classes[idx]
 
 
-def batch_to_plottable_image(batch):
-    return np.moveaxis(np.array(batch[0].detach().cpu()), 0, -1)
+def batch_to_plottable_image(batch, index=0):
+    return np.moveaxis(np.array(batch[index].detach().cpu()), 0, -1)
 
 
 def dataset_name(data_path):
