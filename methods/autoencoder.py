@@ -15,7 +15,9 @@ def train_autoencoder(model, img, lbl, optimizer, criterion):
     # Back-propagate and update parameters
     optimizer.step()
 
-    return loss.item(), -1
+    # Optimization purposes
+    loss_item = loss.item()
+    return loss_item, loss_item
 
 
 def val_autoencoder(model, img, lbl, criterion):
@@ -26,4 +28,7 @@ def val_autoencoder(model, img, lbl, criterion):
 
     # Compute loss & metrics
     loss = criterion(img, out)
-    return loss.item(), -1
+
+    # Optimization purposes
+    loss_item = loss.item()
+    return loss_item, loss_item
