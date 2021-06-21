@@ -5,6 +5,8 @@ from utils.metrics import accuracy
 
 
 def train_rotation(model, img, lbl, optimizer, criterion):
+    model.train()
+
     # Zero the parameter's gradient
     optimizer.zero_grad()
 
@@ -22,7 +24,7 @@ def train_rotation(model, img, lbl, optimizer, criterion):
 
     # Compute loss & metrics
     loss = criterion(out, angle)
-    acc = accuracy(angle, out)
+    acc = accuracy(out, angle)
 
     # Compute parameter's gradient
     loss.backward()
@@ -34,6 +36,7 @@ def train_rotation(model, img, lbl, optimizer, criterion):
 
 
 def val_rotation(model, img, lbl, criterion):
+    model.eval()
     # Initialize rotation transform
     rot = DiscreteRandomRotation([0, 90, 180, 270])
     # Perform a rotation for each image
@@ -43,11 +46,12 @@ def val_rotation(model, img, lbl, criterion):
     img = torch.stack(img, dim=0).cuda()
     angle = torch.tensor(angle).cuda()
 
-    # Get model prediction
-    out = model(img)
+    with torch.no_grad():
+        # Get model prediction
+        out = model(img)
 
-    # Compute loss & metrics
-    loss = criterion(out, angle)
-    acc = accuracy(angle, out)
+        # Compute loss & metrics
+        loss = criterion(out, angle)
+        acc = accuracy(out, angle)
 
     return loss.item(), acc.item()
