@@ -1,3 +1,6 @@
+import glob
+import os
+
 import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import DataLoader
@@ -15,7 +18,9 @@ def main():
 
     ext = cf.image_extension_by_dataset[dataset_name(args.data)]
     model = AutoEncoder(None)
-    model.load_state_dict(torch.load('../checkpoints/kather_rotation_latest.pth'))
+    # print(glob.glob(f'../checkpoints/pretext-{dataset_name(args.data)}-{args.method}_*'))
+    weights = os.path.join(sorted(glob.glob(f'../checkpoints/pretext-{dataset_name(args.data)}-{args.method}_*'))[-1], 'latest.pth')
+    model.load_state_dict(torch.load(weights))
 
     dataset = cf.dataset[dataset_name(args.data)](args, mode='val', ext=ext)
     dataloader = DataLoader(dataset, batch_size=1, num_workers=1, shuffle=True)
