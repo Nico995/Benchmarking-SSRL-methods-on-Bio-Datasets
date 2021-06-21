@@ -1,3 +1,6 @@
+import glob
+import os
+
 from torch.nn import CrossEntropyLoss, MSELoss
 
 from dataset import Kather, Pedestrians
@@ -35,13 +38,12 @@ classes_by_dataset = {
 
 classes_by_method = {
     'rotation': 4,
-    'jigsaw': 100,
+    'jigsaw': 2,
     'autoencoder': 0,
     'imagenet_pretrained': classes_by_dataset[dataset_name(args.data)],
     'random_initialization': classes_by_dataset[dataset_name(args.data)],
     'instance_discrimination': 128,
     'supervised': classes_by_dataset[dataset_name(args.data)],
-    'downstream': classes_by_dataset[dataset_name(args.data)]
 }
 
 train_by_method = {
@@ -51,7 +53,6 @@ train_by_method = {
     'imagenet_pretrained': train_supervised,
     'random_initialization': train_supervised,
     'supervised': train_supervised,
-    'downstream': train_supervised
 }
 
 val_by_method = {
@@ -61,7 +62,6 @@ val_by_method = {
     'imagenet_pretrained': val_supervised,
     'random_initialization': val_supervised,
     'supervised': val_supervised,
-    'downstream': val_supervised
 }
 
 criterion_by_method = {
@@ -72,7 +72,6 @@ criterion_by_method = {
     'random_initialization': CrossEntropyLoss(),
     'instance_discrimination': CrossEntropyLoss(),
     'supervised': CrossEntropyLoss(),
-    'downstream': CrossEntropyLoss(),
 }
 
 model_by_method = {
@@ -81,6 +80,22 @@ model_by_method = {
     'autoencoder': AutoEncoder,
     'imagenet_pretrained': ImagenetPretrained,
     'random_initialization': RandomInitialization,
+    # TODO: 'instance_discrimination': ...,
     'supervised': Supervised,
-    'downstream': Supervised,
+}
+
+# This is the default weight path, weights are only needed when running downstream linear class. training
+default_weights_path = \
+    None if args.level == 'pretext' else os.path.join(f'./models/pretrained/', f'{dataset_name(args.data)}-{args.method}', 'latest.pth')
+
+# Since not every method requires pretrained weights
+# (e.g. random init doesn't need to run pretext training first), We only return for some methods
+weights_by_method = {
+    'rotation': default_weights_path,
+    'jigsaw': default_weights_path,
+    'autoencoder': default_weights_path,
+    'imagenet_pretrained': None,
+    'random_initialization': None,
+    'instance_discrimination': default_weights_path,
+    'supervised': default_weights_path,
 }
