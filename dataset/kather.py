@@ -50,7 +50,7 @@ class Kather(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         image = Image.open(self.images[index])
-        return self.trans[self.mode](image), self.labels[index]
+        return self.trans.get(self.mode, self.trans['val'])(image), self.labels[index]
 
     def __len__(self):
         return len(self.images)
