@@ -7,7 +7,7 @@ import tqdm
 from torch.nn import Sequential
 
 
-def main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_scheduler, criterion, writer):
+def main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_scheduler, criterion, writer, checkpoint_folder):
     """
     This is the main training loop. I left in this function the two main loops for the epochs and batches respectively.
     Since we implementing different training techniques, the actual body of the training is located in methods/ package,
@@ -26,7 +26,6 @@ def main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_schedul
         train_running_loss = []
         train_running_acc = []
 
-        model.train()
         # Training Batch loop
         for i, (img, lbl) in enumerate(dl_train):
             '''
@@ -53,11 +52,9 @@ def main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_schedul
         val_running_loss = []
         val_running_acc = []
 
-        model.eval()
         # Validation Batch Loop
         for i, (img, lbl) in enumerate(dl_val):
-            with torch.no_grad():
-                loss, acc = val_(model, img, lbl, criterion)
+            loss, acc = val_(model, img, lbl, criterion)
             val_running_loss.append(loss)
             val_running_acc.append(acc)
 
@@ -76,7 +73,9 @@ def main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_schedul
         new_acc = np.mean(val_running_acc)
         if new_acc > best_acc:
             best_acc = new_acc
-            torch.save(Sequential(*list(model.backbone.children())[:-1]).state_dict(), join('checkpoints', f'best_acc_checkpoint.pth'))
-        torch.save(model.state_dict(), join('checkpoints', f'latest_checkpoint.pth'))
+            torch.save(Sequential(*list(model.backbone.children())[:-1]).state_dict(),
+                       join(args.checkpoint_path, checkpoint_folder, f'best.pth'))
+
+        torch.save(model.state_dict(), join(args.checkpoint_path, checkpoint_folder, f'latest.pth'))
 
 # Training finished
