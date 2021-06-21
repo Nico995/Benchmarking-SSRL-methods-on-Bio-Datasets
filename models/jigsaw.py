@@ -13,16 +13,18 @@ applied to a given image (=> classifier output shape: [B, #_perm] )
 
 class Jigsaw(nn.Module):
 
-    def __init__(self, code_size=256, num_perms=100, version='18'):
+    def __init__(self, num_classes=100, code_size=256, version='18', weights=None):
         super(Jigsaw, self).__init__()
         # Backbone of jigsaw model
-        self.backbone = get_backbone(out_features=code_size, version=version)
+        self.backbone = get_backbone(out_features=code_size, version=version, weights=weights)
 
         # Classifier for jigsaw task
+        # The factor of 9 is because in the forward method we concatenate 9 batches
+        # Before feeding them to the classifier
         self.classifier = Sequential(
             Linear(9 * code_size, 1024),
             ReLU(inplace=True),
-            Linear(1024, num_perms))
+            Linear(1024, num_classes))
 
     def forward(self, x):
         """
@@ -34,13 +36,13 @@ class Jigsaw(nn.Module):
                 W, H: Width and Height
         """
         num_tiles, num_samples, c, h, w = x.size()
-
         features = []
         # Iterate over the number of tiles
         for t in range(num_tiles):
             # Extract features for each tile, for each image
             z = self.backbone(x[t])
             features.append(z)
+
         x = torch.cat(features, 1)
         x = self.classifier(x)
 

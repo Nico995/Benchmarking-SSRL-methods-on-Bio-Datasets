@@ -41,12 +41,12 @@ class Decoder(nn.Module):
 
 
 class AutoEncoder(nn.Module):
-    def __init__(self, latent_dim=256, channel_factor=64, version='18'):
+    def __init__(self, num_classes, latent_dim=256, channel_factor=64, version='18', weights=None):
         super(AutoEncoder, self).__init__()
 
-        self.encoder = get_backbone(out_features=latent_dim, version=version)
+        self.backbone = get_backbone(out_features=latent_dim, version=version)
         self.decoder = Decoder(latent_dim=latent_dim, channel_factor=channel_factor)
 
     def forward(self, x):
-        code = self.encoder(x)
+        code = self.backbone(x)
         return self.decoder(code)

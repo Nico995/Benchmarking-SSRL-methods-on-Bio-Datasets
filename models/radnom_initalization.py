@@ -5,9 +5,9 @@ from .resnet_backbone import get_backbone
 
 
 class RandomInitialization(nn.Module):
-    def __init__(self, num_classes, version='18'):
+    def __init__(self, num_classes, version='18', weights=None):
         super(RandomInitialization, self).__init__()
-        self.backbone = get_backbone(out_features=num_classes, version=version)
+        self.backbone = get_backbone(out_features=num_classes, version=version, weights=weights)
         self.init_weight()
 
     def forward(self, x):
