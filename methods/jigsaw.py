@@ -13,7 +13,7 @@ from transforms import DiscreteRandomRotation
 
 # Parameters used to identify non overlapping tiles, for an image of size 64x64
 tile_params = {
-    "size": 19,
+    "size": 21,
     "space": 21,
     "jitter": 1,
     "offset": 1
@@ -22,10 +22,11 @@ tile_params = {
 tiles_start = [i*tile_params['space'] + tile_params['offset'] for i in range(3)]
 
 # 'Good' permutations
-perms = np.load('data/permutations/naroozi_perms_100_patches_9_max.npy')
+precomputed_permutations = np.load('data/permutations/naroozi_perms_100_patches_9_min.npy')
 
 
 def scramble(tiles):
+
     """
     Scrambles the batch tiles with some pseudo-random permutations
     Args:
@@ -40,8 +41,8 @@ def scramble(tiles):
 
     for img in range(tiles.shape[1]):
         # Extract random permutation from list and store it
-        random_idx = np.random.choice(perms.shape[0])
-        random_perm = perms[random_idx]
+        random_idx = np.random.choice(precomputed_permutations.shape[0])
+        random_perm = precomputed_permutations[random_idx]
         random_perms.append(random_idx)
         # Scramble tiles of image <img> according of said permutation, and store them
 
@@ -55,7 +56,7 @@ def tile(batch):
     """
     Generates tiles for the whole batch of images
     Args:
-        batch (torch.tensor): Batch of images of shape (T, B, C, W, H)
+        batch (torch.tensor): Batch of images of shape (B, C, W, H)
 
     Returns:
         (torch.tensor): Batch of tiles of shape (T, B, C, W, H)
@@ -63,39 +64,47 @@ def tile(batch):
 
     tiles = []
 
-    # for i in image:
     for x, y in list(product(tiles_start, repeat=2)):
         tiles.append(crop(batch, x, y, tile_params['size'], tile_params['size']))
     tiles = torch.stack(tiles)
     return tiles
 
 
-def visualize_srcamble(img, tiles):
-    plt.imshow(batch_to_plottable_image(img))
+def visualize_srcamble(img, tiles, permutations):
+    index = 1
+    print(permutations)
+    print(permutations[index])
+    permutation = precomputed_permutations[permutations[index]]
+    plt.imshow(batch_to_plottable_image(img, index))
     plt.show()
 
     fig, ax = plt.subplots(3, 3, sharex=True, sharey=True)
-    fig.subplots_adjust(hspace=0)
-    fig.subplots_adjust(wspace=0)
+    fig.suptitle(f'permutation: {permutation}', fontsize=20)
+    # fig.subplots_adjust(hspace=0)
+    # fig.subplots_adjust(wspace=0)
     ax = ax.ravel()
 
-    for i, t in enumerate(tiles[:, 0, :, :, :]):
+    for i, t in enumerate(tiles[:, index, :, :, :]):
         ax[i].imshow(batch_to_plottable_image(t.unsqueeze(0)))
+        ax[i].set_title(f'tile {permutation[i]}')
 
     plt.show()
     exit()
 
 
 def train_jigsaw(model, img, lbl, optimizer, criterion):
+    model.train()
+
     # Zero the parameter's gradient
     optimizer.zero_grad()
 
     # Tile the batch of images and scramble them
     tiles = tile(img)
+
     tiles, permutations = scramble(tiles)
 
     # Uncomment the line below if you want to check the tile appearance
-    # visualize_srcamble(img, tiles)
+    # visualize_srcamble(img, tiles, permutations)
 
     tiles, permutations = tiles.cuda(), permutations.cuda()
 
@@ -104,7 +113,7 @@ def train_jigsaw(model, img, lbl, optimizer, criterion):
 
     # Compute loss & metrics
     loss = criterion(out, permutations)
-    acc = accuracy(permutations, out)
+    acc = accuracy(out, permutations)
 
     # Compute parameter's gradient
     loss.backward()
@@ -116,17 +125,21 @@ def train_jigsaw(model, img, lbl, optimizer, criterion):
 
 
 def val_jigsaw(model, img, lbl, criterion):
+    model.eval()
 
-    # Tile the batch of images and scramble them
-    tiles = tile(img)
-    tiles, permutations = scramble(tiles)
-    tiles, permutations = tiles.cuda(), permutations.cuda()
+    with torch.no_grad():
 
-    # Get model prediction
-    out = model(tiles)
+        # Tile the batch of images and scramble them
+        tiles = tile(img)
+        tiles, permutations = scramble(tiles)
+        tiles, permutations = tiles.cuda(), permutations.cuda()
 
-    # Compute loss & metrics
-    loss = criterion(out, permutations)
-    acc = accuracy(permutations, out)
+        # Get model prediction
+        out = model(tiles)
+
+        # Compute loss & metrics
+        loss = criterion(out, permutations)
+
+        acc = accuracy(out, permutations)
 
     return loss.item(), acc.item()
