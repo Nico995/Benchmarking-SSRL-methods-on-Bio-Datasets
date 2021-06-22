@@ -10,19 +10,20 @@ from utils.metrics import accuracy
 from utils import batch_to_plottable_image
 from transforms import DiscreteRandomRotation
 
+# TODO: provare la permutazione nulla
 
 # Parameters used to identify non overlapping tiles, for an image of size 64x64
 tile_params = {
     "size": 21,
     "space": 21,
     "jitter": 1,
-    "offset": 1
+    "offset": 0
 }
 
 tiles_start = [i*tile_params['space'] + tile_params['offset'] for i in range(3)]
 
 # 'Good' permutations
-precomputed_permutations = np.load('data/permutations/naroozi_perms_100_patches_9_min.npy')
+precomputed_permutations = np.load('data/permutations/naroozi_perms_100_patches_9_oneplusnull.npy')
 
 
 def scramble(tiles):
@@ -72,8 +73,7 @@ def tile(batch):
 
 def visualize_srcamble(img, tiles, permutations):
     index = 1
-    print(permutations)
-    print(permutations[index])
+
     permutation = precomputed_permutations[permutations[index]]
     plt.imshow(batch_to_plottable_image(img, index))
     plt.show()
@@ -96,7 +96,7 @@ def train_jigsaw(model, img, lbl, optimizer, criterion):
     model.train()
 
     # Zero the parameter's gradient
-    optimizer.zero_grad()
+    optimizer.zero_grad(set_to_none=True)
 
     # Tile the batch of images and scramble them
     tiles = tile(img)
@@ -125,6 +125,7 @@ def train_jigsaw(model, img, lbl, optimizer, criterion):
 
 
 def val_jigsaw(model, img, lbl, criterion):
+    return -1, -1
     model.eval()
 
     with torch.no_grad():

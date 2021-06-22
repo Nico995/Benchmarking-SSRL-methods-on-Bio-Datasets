@@ -12,12 +12,13 @@ class Kather(torch.utils.data.Dataset):
     Custom dataset class to manage images and labels
     """
 
-    def __init__(self, args, mode='train', ext='tif'):
+    def __init__(self, args, mode='train', ext='tif', get_indices=False):
         super(Kather, self).__init__()
 
         self.data = args.data
         self.mode = mode
         self.ext = ext
+        self.get_indices = get_indices
 
         self.rescale_size = args.rescale_size
         self.crop_size = args.crop_size
@@ -39,17 +40,21 @@ class Kather(torch.utils.data.Dataset):
                 RandomCrop(self.crop_size),
                 ToTensor(),
                 Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                # Normalize((0.650, 0.472, 0.584), (0.256, 0.327, 0.268))
             ]),
             'val': Compose([
                 Resize(self.rescale_size),
                 CenterCrop(self.crop_size),
                 ToTensor(),
                 Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                # Normalize((0.650, 0.472, 0.584), (0.256, 0.327, 0.268))
             ])
         }
 
     def __getitem__(self, index):
         image = Image.open(self.images[index])
+        if self.get_indices:
+            return self.trans.get(self.mode, self.trans['val'])(image), index
         return self.trans.get(self.mode, self.trans['val'])(image), self.labels[index]
 
     def __len__(self):

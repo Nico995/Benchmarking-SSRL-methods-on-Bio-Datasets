@@ -24,10 +24,10 @@ class DownstreamClassification(nn.Module):
         # exit()
         ##############
         # Attach a linear classifier to be trained
-        self.linear_head = Linear(in_features=code_size, out_features=num_classes)
+        self.linear_head = Linear(in_features=code_size, out_features=num_classes, bias=True)
 
     def forward(self, x):
         x = self.backbone(x)
-        x = x.view(x.shape[0], x.shape[1])
+        x = torch.flatten(x, 1)
         x = self.linear_head(x)
         return x

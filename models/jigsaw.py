@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from torch.nn import Sequential, Linear, ReLU
 from .resnet_backbone import get_backbone
+from torchvision.models import resnet
 
 '''
 The jigsaw task consists in predicting which of the 100 pseudo random permutations has been applied to a specific image.
@@ -41,6 +42,7 @@ class Jigsaw(nn.Module):
         for t in range(num_tiles):
             # Extract features for each tile, for each image
             z = self.backbone(x[t])
+            print(z.shape)
             features.append(z)
 
         x = torch.cat(features, 1)

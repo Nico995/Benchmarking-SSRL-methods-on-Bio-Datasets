@@ -6,7 +6,9 @@ from torch.nn import CrossEntropyLoss, MSELoss
 from dataset import Kather, Pedestrians
 from methods import train_rotation, val_rotation, train_jigsaw, val_jigsaw, train_autoencoder, val_autoencoder, \
     train_supervised, val_supervised
+from methods.instance_discrimination import train_instance_discrimination, val_instance_discrimination
 from models import Rotation, Jigsaw, AutoEncoder, ImagenetPretrained, RandomInitialization
+from models.instance_discrimination import InstanceDiscrimination
 from models.supervised import Supervised
 from parser import load_args
 from utils import dataset_name
@@ -42,7 +44,7 @@ classes_by_method = {
     'autoencoder': 0,
     'imagenet_pretrained': classes_by_dataset[dataset_name(args.data)],
     'random_initialization': classes_by_dataset[dataset_name(args.data)],
-    'instance_discrimination': 128,
+    'instance_discrimination': [128, 3000],
     'supervised': classes_by_dataset[dataset_name(args.data)],
 }
 
@@ -52,6 +54,7 @@ train_by_method = {
     'autoencoder': train_autoencoder,
     'imagenet_pretrained': train_supervised,
     'random_initialization': train_supervised,
+    'instance_discrimination': train_instance_discrimination,
     'supervised': train_supervised,
 }
 
@@ -61,6 +64,7 @@ val_by_method = {
     'autoencoder': val_autoencoder,
     'imagenet_pretrained': val_supervised,
     'random_initialization': val_supervised,
+    'instance_discrimination': val_instance_discrimination,
     'supervised': val_supervised,
 }
 
@@ -80,7 +84,7 @@ model_by_method = {
     'autoencoder': AutoEncoder,
     'imagenet_pretrained': ImagenetPretrained,
     'random_initialization': RandomInitialization,
-    # TODO: 'instance_discrimination': ...,
+    'instance_discrimination': InstanceDiscrimination,
     'supervised': Supervised,
 }
 

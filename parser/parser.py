@@ -6,7 +6,8 @@ def load_args():
 
     # Training config
     parser.add_argument('--epochs', type=int, default=50, help='Number of epochs to train for')
-    parser.add_argument('--batch_size', type=int, default=2, help='Number of images in each batch')
+    parser.add_argument('--train_batch_size', type=int, default=512, help='Number of images in each batch')
+    parser.add_argument('--val_batch_size', type=int, default=100, help='Number of images in each batch')
     parser.add_argument('--lr', type=float, default=0.025, help='learning rate used for train')
     parser.add_argument('--method', type=str, default='rotation', help='training method to use [rotation/jigsaw/...]')
     parser.add_argument('--level', type=str, default='pretext', help='[pretext/downstream]')

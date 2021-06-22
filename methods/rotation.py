@@ -37,14 +37,15 @@ def train_rotation(model, img, lbl, optimizer, criterion):
 
 def val_rotation(model, img, lbl, criterion):
     model.eval()
+
     # Initialize rotation transform
     rot = DiscreteRandomRotation([0, 90, 180, 270])
+
     # Perform a rotation for each image
     img, angle = map(list, zip(*[tuple(rot(i)) for i in img]))
 
     # Convert lists back to tensors
-    img = torch.stack(img, dim=0).cuda()
-    angle = torch.tensor(angle).cuda()
+    img, angle = torch.stack(img, dim=0).cuda(), torch.tensor(angle).cuda()
 
     with torch.no_grad():
         # Get model prediction

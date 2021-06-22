@@ -1,3 +1,6 @@
+import torch
+
+
 def train_autoencoder(model, img, lbl, optimizer, criterion):
     # Zero the parameter's gradient
     optimizer.zero_grad()
@@ -21,13 +24,16 @@ def train_autoencoder(model, img, lbl, optimizer, criterion):
 
 
 def val_autoencoder(model, img, lbl, criterion):
+    model.eval()
+
     img = img.cuda()
 
-    # Get model prediction
-    out = model(img)
+    with torch.no_grad():
+        # Get model prediction
+        out = model(img)
 
-    # Compute loss & metrics
-    loss = criterion(img, out)
+        # Compute loss & metrics
+        loss = criterion(img, out)
 
     # Optimization purposes
     loss_item = loss.item()

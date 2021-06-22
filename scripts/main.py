@@ -20,6 +20,7 @@ To avoid endless chains of if-else, we will make great use of the dictionary str
 We will assign a python object (dataset, training loop, ...) to each possible value a user can input in the args.
 '''
 
+
 # TODO: write checkpointing just for last fc (classifier) in case of downstream task
 
 def main():
@@ -34,13 +35,16 @@ def main():
     # Initialize data_loader structures
     try:
         ext = cf.image_extension_by_dataset[dataset_name(args.data)]
-        ds_train = cf.dataset[dataset_name(args.data)](args, ext=ext)
-        ds_val = cf.dataset[dataset_name(args.data)](args, mode='val', ext=ext)
+        ds_train = cf.dataset[dataset_name(args.data)](args, ext=ext,
+                                                       get_indices=args.method == 'instance_discrimination')
+        ds_val = cf.dataset[dataset_name(args.data)](args, mode='val', ext=ext,
+                                                     get_indices=args.method == 'instance_discrimination')
     except KeyError:
         raise DatasetNotSupportedError(dataset_name(args.data))
 
-    dl_train = DataLoader(ds_train, batch_size=args.batch_size, num_workers=args.threads, drop_last=True, shuffle=True)
-    dl_val = DataLoader(ds_val, batch_size=args.batch_size, num_workers=args.threads, drop_last=True, shuffle=True)
+    dl_train = DataLoader(ds_train, batch_size=args.train_batch_size, num_workers=args.threads, drop_last=True,
+                          shuffle=False)
+    dl_val = DataLoader(ds_val, batch_size=args.val_batch_size, num_workers=args.threads, drop_last=True, shuffle=True)
 
     # if available
     try:
@@ -62,18 +66,21 @@ def main():
             val_ = cf.val_by_method['supervised']
             criterion = cf.criterion_by_method['supervised']
 
-        else:
+            # Load optimizer
+            optimizer = SGD(filter(lambda param: param.requires_grad, model.parameters()), lr=args.lr, momentum=0.9,
+                            weight_decay=1)
+        else: # == 'pretext'
             # Get training method
             train_ = cf.train_by_method[args.method]
             val_ = cf.val_by_method[args.method]
             criterion = cf.criterion_by_method[args.method]
 
+            # Load optimizer
+            optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+
         model = model.cuda()
     except KeyError:
         raise MethodNotSupportedError(args.method)
-
-    # Load optimizer
-    optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.9)
 
     # Load learning rate scheduler
     lr_scheduler = MultiStepLR(optimizer, [80, 100], 0.1)
@@ -87,7 +94,8 @@ def main():
     # writer = SummaryWriter(comment=f'_{args.method}_{args.epochs}ep_{args.batch_size}bs_{args.data.split("/")[-2]}')
     writer = SummaryWriter(logdir=os.path.join(args.checkpoint_path, checkpoint_folder))
 
-    main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_scheduler, criterion, writer, checkpoint_folder)
+    main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_scheduler, criterion, writer,
+              checkpoint_folder)
 
 
 if __name__ == '__main__':

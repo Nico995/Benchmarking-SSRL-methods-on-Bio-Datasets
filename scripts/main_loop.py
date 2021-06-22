@@ -4,7 +4,10 @@ from os.path import join
 import numpy as np
 import torch
 import tqdm
+from matplotlib import pyplot as plt
 from torch.nn import Sequential
+
+from utils import batch_to_plottable_image
 
 
 def main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_scheduler, criterion, writer, checkpoint_folder):
@@ -20,41 +23,50 @@ def main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_schedul
     for epoch in range(args.epochs):
 
         # Epoch progress bar
-        tq = tqdm.tqdm(total=len(dl_train) * args.batch_size)
+        tq = tqdm.tqdm(total=len(dl_train) * args.train_batch_size)
         tq.set_description(f'epoch {epoch + 1}')
 
         train_running_loss = []
         train_running_acc = []
 
+        model.train()
         # Training Batch loop
         for i, (img, lbl) in enumerate(dl_train):
             '''
             All the important training stuff can be found following the train_ function. train_ function contains the
             value train_method corresponding to the args.method key. 
             '''
-            loss, acc = train_(model, img, lbl, optimizer, criterion)
+            # plt.imshow(batch_to_plottable_image(img))
+            # plt.show()
+            # exit()
+
+            with torch.set_grad_enabled(True):
+                loss, acc = train_(model, img, lbl, optimizer, criterion)
             # Update progress bar
-            tq.update(args.batch_size)
+            tq.update(args.train_batch_size)
             tq.set_postfix({'train_loss': '%.6f' % loss, 'train_acc': '%.6f' % acc})
             train_running_loss.append(loss)
             train_running_acc.append(acc)
 
-            writer.add_scalar('training_loss', loss, epoch * args.batch_size + i)
-            writer.add_scalar('training_acc', acc, epoch * args.batch_size + i)
+            writer.add_scalar('training_loss', train_running_loss[-1], epoch * args.train_batch_size + i)
+            writer.add_scalar('training_acc', train_running_acc[-1], epoch * args.train_batch_size + i)
 
         # Update learning rate
         lr_scheduler.step()
 
         # Close batch progress bar
         writer.add_scalar('epoch_loss', np.mean(train_running_loss), epoch)
-        writer.add_scalar('epoch_acc', np.mean(train_running_loss), epoch)
+        writer.add_scalar('epoch_acc', np.mean(train_running_acc), epoch)
 
         val_running_loss = []
         val_running_acc = []
 
+        model.eval()
         # Validation Batch Loop
         for i, (img, lbl) in enumerate(dl_val):
-            loss, acc = val_(model, img, lbl, criterion)
+            with torch.set_grad_enabled(False):
+                loss, acc = val_(model, img, lbl, criterion)
+
             val_running_loss.append(loss)
             val_running_acc.append(acc)
 

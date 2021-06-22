@@ -3,8 +3,6 @@ from utils.metrics import accuracy
 
 
 def train_supervised(model, img, lbl, optimizer, criterion):
-    model.train()
-
     # Zero the parameter's gradient
     optimizer.zero_grad(set_to_none=True)
 
@@ -28,17 +26,14 @@ def train_supervised(model, img, lbl, optimizer, criterion):
 
 
 def val_supervised(model, img, lbl, criterion):
-    model.eval()
+    # Move data to GPU
+    img, lbl = img.cuda(), lbl.cuda()
 
-    with torch.no_grad():
-        # Move data to GPU
-        img, lbl = img.cuda(), lbl.cuda()
+    # Get model prediction
+    out = model(img)
 
-        # Get model prediction
-        out = model(img)
-
-        # Compute loss & metrics
-        loss = criterion(out, lbl)
-        acc = accuracy(out, lbl)
+    # Compute loss & metrics
+    loss = criterion(out, lbl)
+    acc = accuracy(out, lbl)
 
     return loss.item(), acc.item()
