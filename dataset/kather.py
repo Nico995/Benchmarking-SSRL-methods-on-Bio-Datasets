@@ -39,15 +39,19 @@ class Kather(torch.utils.data.Dataset):
                 Resize(self.rescale_size),
                 RandomCrop(self.crop_size),
                 ToTensor(),
-                Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-                # Normalize((0.650, 0.472, 0.584), (0.256, 0.327, 0.268))
+                Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)
+                # Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                # Normalize((0.650, 0.472, 0.584), (0.256, 0.327, 0.268)
+                )
             ]),
             'val': Compose([
                 Resize(self.rescale_size),
                 CenterCrop(self.crop_size),
                 ToTensor(),
-                Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-                # Normalize((0.650, 0.472, 0.584), (0.256, 0.327, 0.268))
+                Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)
+                # Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                # Normalize((0.650, 0.472, 0.584), (0.256, 0.327, 0.268)
+                )
             ])
         }
 
