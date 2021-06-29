@@ -23,9 +23,9 @@ if __name__ == '__main__':
 
     images = []
     for image_file in tqdm.tqdm(images_files):
-        images.append(np.array(Image.open(image_file))/255)
+        images.append(np.array(Image.open(image_file)))
     images = np.stack(images, axis=0)
 
     print(images.shape)
-    print('mean ', images.mean(axis=(0, 1, 2)))
-    print('std ', images.std(axis=(0, 1, 2)))
+    print('mean ', images.mean(axis=(0, 1, 2))/255)
+    print('std ', images.std(axis=(0, 1, 2))/255)
