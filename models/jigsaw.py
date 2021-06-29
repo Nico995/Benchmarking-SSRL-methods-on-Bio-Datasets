@@ -42,7 +42,6 @@ class Jigsaw(nn.Module):
         for t in range(num_tiles):
             # Extract features for each tile, for each image
             z = self.backbone(x[t])
-            print(z.shape)
             features.append(z)
 
         x = torch.cat(features, 1)
