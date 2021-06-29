@@ -35,10 +35,8 @@ def main():
     # Initialize data_loader structures
     try:
         ext = cf.image_extension_by_dataset[dataset_name(args.data)]
-        ds_train = cf.dataset[dataset_name(args.data)](args, ext=ext,
-                                                       get_indices=args.method == 'instance_discrimination')
-        ds_val = cf.dataset[dataset_name(args.data)](args, mode='val', ext=ext,
-                                                     get_indices=args.method == 'instance_discrimination')
+        ds_train = cf.dataset[dataset_name(args.data)](args, ext=ext, get_indices=args.method == 'instance_discrimination')
+        ds_val = cf.dataset[dataset_name(args.data)](args, mode='val', ext=ext, get_indices=args.method == 'instance_discrimination')
     except KeyError:
         raise DatasetNotSupportedError(dataset_name(args.data))
 
@@ -76,7 +74,7 @@ def main():
             criterion = cf.criterion_by_method[args.method]
 
             # Load optimizer
-            optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+            optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.9)
 
         model = model.cuda()
     except KeyError:
