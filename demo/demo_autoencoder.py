@@ -17,9 +17,9 @@ def main():
     args = load_args()
 
     ext = cf.image_extension_by_dataset[dataset_name(args.data)]
-    model = AutoEncoder(None)
+    model = AutoEncoder(num_classes=8, version=args.version)
     # print(glob.glob(f'../checkpoints/pretext-{dataset_name(args.data)}-{args.method}_*'))
-    weights = os.path.join(sorted(glob.glob(f'../checkpoints/pretext-{dataset_name(args.data)}-{args.method}_*'))[-1], 'latest.pth')
+    weights = os.path.join(f'../models/pretrained/kather-autoencoder/latest.pth')
     model.load_state_dict(torch.load(weights))
 
     dataset = cf.dataset[dataset_name(args.data)](args, mode='val', ext=ext)
