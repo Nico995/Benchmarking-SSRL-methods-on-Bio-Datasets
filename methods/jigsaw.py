@@ -6,7 +6,7 @@ import torch
 from torch import nn
 from torchvision.transforms.functional import crop
 
-from utils.metrics import accuracy
+from utils.metrics import accuracy, corrects
 from utils import batch_to_plottable_image
 from transforms import DiscreteRandomRotation
 
@@ -14,16 +14,16 @@ from transforms import DiscreteRandomRotation
 
 # Parameters used to identify non overlapping tiles, for an image of size 64x64
 tile_params = {
-    "size": 21,
-    "space": 21,
+    "size": 7,
+    "space": 10,
     "jitter": 1,
-    "offset": 0
+    "offset": 3
 }
 
 tiles_start = [i*tile_params['space'] + tile_params['offset'] for i in range(3)]
 
 # 'Good' permutations
-precomputed_permutations = np.load('data/permutations/naroozi_perms_100_patches_9_oneplusnull.npy')
+precomputed_permutations = np.load('../data/permutations/naroozi_perms_100_patches_9_max.npy')
 
 
 def scramble(tiles):
@@ -113,7 +113,7 @@ def train_jigsaw(model, img, lbl, optimizer, criterion):
 
     # Compute loss & metrics
     loss = criterion(out, permutations)
-    acc = accuracy(out, permutations)
+    corr = corrects(out, permutations)
 
     # Compute parameter's gradient
     loss.backward()
@@ -121,7 +121,7 @@ def train_jigsaw(model, img, lbl, optimizer, criterion):
     # Back-propagate and update parameters
     optimizer.step()
 
-    return loss.item(), acc.item()
+    return loss.item(), corr.item()
 
 
 def val_jigsaw(model, img, lbl, criterion):
