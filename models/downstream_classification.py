@@ -5,17 +5,19 @@ from .resnet_backbone import get_backbone
 
 
 class DownstreamClassification(nn.Module):
-    def __init__(self, pretrained_model, num_classes, code_size=256, weights=None):
+    def __init__(self, pretrained_model, method, num_classes, code_size=256, weights=None):
         super(DownstreamClassification, self).__init__()
+        self.methods_with_head = ['jigsaw']
         # Use the backbone from a previous pretext training
         self.backbone = pretrained_model.backbone
 
-        # Remove the last fc layer
-        # TODO: This needs to be done only for some pretext models not for everyone (i.e. autoencoder doesn't need it)
-        self.backbone = nn.Sequential(
-            # removing the last convolutional layer
-            *list(self.backbone.children())[:-1]
-        )
+        if method not in self.methods_with_head:
+            # Remove the last fc layer
+            # TODO: This needs to be done only for some pretext models not for everyone (i.e. autoencoder doesn't need it)
+            self.backbone = nn.Sequential(
+                # removing the last convolutional layer
+                *list(self.backbone.children())[:-1]
+            )
 
         # Freeze the backbone
         for m in self.backbone.parameters():
