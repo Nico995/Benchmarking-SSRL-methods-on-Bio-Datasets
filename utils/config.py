@@ -40,7 +40,7 @@ classes_by_dataset = {
 
 classes_by_method = {
     'rotation': 4,
-    'jigsaw': 2,
+    'jigsaw': 100,
     'autoencoder': 8,
     'imagenet_pretrained': classes_by_dataset[dataset_name(args.data)],
     'random_initialization': classes_by_dataset[dataset_name(args.data)],
