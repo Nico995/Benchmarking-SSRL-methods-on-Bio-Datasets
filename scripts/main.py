@@ -65,8 +65,7 @@ def main():
             criterion = cf.criterion_by_method['supervised']
 
             # Load optimizer
-            optimizer = SGD(filter(lambda param: param.requires_grad, model.parameters()), lr=args.lr, momentum=0.9,
-                            weight_decay=1)
+            optimizer = SGD(filter(lambda param: param.requires_grad, model.parameters()), lr=args.lr, momentum=0.9, weight_decay=1)
         else: # == 'pretext'
             # Get training method
             train_ = cf.train_by_method[args.method]
