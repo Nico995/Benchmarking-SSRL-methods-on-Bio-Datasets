@@ -12,7 +12,8 @@ class Pedestrians(torch.utils.data.Dataset):
     Custom dataset class to manage images and labels
     """
 
-    def __init__(self, args, mode='train', ext='tif'):
+    # TODO: Implement get indices
+    def __init__(self, args, mode='train', ext='tif', get_indices=False):
         super(Pedestrians, self).__init__()
 
         self.data = args.data
