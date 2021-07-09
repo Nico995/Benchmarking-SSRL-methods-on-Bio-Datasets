@@ -1,5 +1,5 @@
 import torch
-from utils.metrics import accuracy
+from utils.metrics import accuracy, corrects
 
 
 def train_supervised(model, img, lbl, optimizer, criterion):
@@ -14,7 +14,7 @@ def train_supervised(model, img, lbl, optimizer, criterion):
 
     # Compute loss & metrics
     loss = criterion(out, lbl)
-    acc = accuracy(out, lbl)
+    corr = corrects(out, lbl)
 
     # Compute parameter's gradient
     loss.backward()
@@ -22,7 +22,7 @@ def train_supervised(model, img, lbl, optimizer, criterion):
     # Back-propagate and update parameters
     optimizer.step()
 
-    return loss.item(), acc.item()
+    return loss.item(), corr.item()
 
 
 def val_supervised(model, img, lbl, criterion):
@@ -34,6 +34,6 @@ def val_supervised(model, img, lbl, criterion):
 
     # Compute loss & metrics
     loss = criterion(out, lbl)
-    acc = accuracy(out, lbl)
+    corr = corrects(out, lbl)
 
-    return loss.item(), acc.item()
+    return loss.item(), corr.item()
