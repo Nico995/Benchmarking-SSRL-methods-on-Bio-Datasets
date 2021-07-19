@@ -7,7 +7,7 @@ from .resnet_backbone import get_backbone
 class DownstreamClassification(nn.Module):
     def __init__(self, pretrained_model, method, num_classes, code_size=256, weights=None):
         super(DownstreamClassification, self).__init__()
-        self.methods_with_head = ['jigsaw']
+        self.methods_with_head = ['jigsaw', 'autoencoder']
         # Use the backbone from a previous pretext training
         self.backbone = pretrained_model.backbone
 
@@ -28,6 +28,5 @@ class DownstreamClassification(nn.Module):
 
     def forward(self, x):
         x = self.backbone(x)
-        x = torch.flatten(x, 1)
         x = self.linear_head(x)
         return x
