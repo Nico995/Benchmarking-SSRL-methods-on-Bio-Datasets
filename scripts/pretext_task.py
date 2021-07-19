@@ -64,7 +64,8 @@ def main():
     model = model.cuda()
 
     # Load optimizer
-    optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.9)
+    # optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.9)
+    optimizer = Adam(model.parameters())
 
     # Load learning rate scheduler
     lr_scheduler = MultiStepLR(optimizer, [80, 100], 0.1)

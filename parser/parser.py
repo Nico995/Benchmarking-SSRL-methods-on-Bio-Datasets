@@ -22,6 +22,7 @@ def load_args():
     # Environment resources config
     parser.add_argument('--threads', type=int, default=6, help='number of parallel threads for data loading')
 
+    parser.add_argument('--optimizer', type=str, default="SGD", help='Name of the optimizer')
 
     parser.add_argument('--checkpoint_path', type=str, default='./checkpoints', help='model save root folder')
     #
