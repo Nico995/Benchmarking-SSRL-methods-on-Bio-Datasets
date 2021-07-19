@@ -64,8 +64,12 @@ def main():
     model = model.cuda()
 
     # Load optimizer
-    # optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.9)
-    optimizer = Adam(model.parameters())
+    if args.optimizer == "SGD":
+        optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.9)
+    elif args.optimizer == "Adam":
+        optimizer = Adam(model.parameters())
+    else:
+        NotImplementedError()
 
     # Load learning rate scheduler
     lr_scheduler = MultiStepLR(optimizer, [80, 100], 0.1)
