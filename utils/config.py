@@ -1,15 +1,12 @@
-import glob
 import os
 
-from torch.nn import CrossEntropyLoss, MSELoss, BCELoss
+from torch.nn import CrossEntropyLoss, BCELoss
 
 from dataset import Kather, Pedestrians, CRC, MESO
 from methods import train_rotation, val_rotation, train_jigsaw, val_jigsaw, train_autoencoder, val_autoencoder, \
-    train_supervised, val_supervised
-from methods.instance_discrimination import train_instance_discrimination, val_instance_discrimination
-from models import Rotation, Jigsaw, AutoEncoder, ImagenetPretrained, RandomInitialization
-from models.instance_discrimination import InstanceDiscrimination
-from models.supervised import Supervised
+    train_supervised, val_supervised, train_instance_discrimination, val_instance_discrimination
+from models import Rotation, Jigsaw, AutoEncoder, ImagenetPretrained, RandomInitialization, InstanceDiscrimination, \
+    Supervised
 from parser import load_args
 from utils import dataset_name
 
@@ -96,7 +93,8 @@ model_by_method = {
 
 # This is the default weight path, weights are only needed when running downstream linear class. training
 default_weights_path = \
-    None if args.level == 'pretext' else os.path.join(f'../models/pretrained/', f'{dataset_name(args.data)}-{args.method}', 'latest.pth')
+    None if args.level == 'pretext' else os.path.join(f'../models/pretrained/',
+                                                      f'{dataset_name(args.data)}-{args.method}', 'latest.pth')
 
 # Since not every method requires pretrained weights
 # (e.g. random init doesn't need to run pretext training first), We only return for some methods
