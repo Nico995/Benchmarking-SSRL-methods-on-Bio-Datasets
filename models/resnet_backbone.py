@@ -10,7 +10,7 @@ resnets = {
 }
 
 
-def get_backbone(out_features, version='18', pretrained=False, weights=None):
+def get_backbone(version='18', pretrained=False, weights=None):
 
     # Get the model from pytorch library
     try:
@@ -18,9 +18,10 @@ def get_backbone(out_features, version='18', pretrained=False, weights=None):
     except KeyError:
         raise MethodNotSupportedError(version)
 
+    # removing the last convolutional layer
+    out_features = net.fc.out_features
+
     if weights:
         net.load_state_dict(torch.load(weights), strict=False)
 
-    net.fc = Linear(in_features=net.fc.in_features, out_features=out_features, bias=True)
-
-    return net
+    return net, out_features

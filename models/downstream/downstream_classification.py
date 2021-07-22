@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from torch.nn import Sequential, Linear, ReLU
-from .resnet_backbone import get_backbone
+from ..resnet_backbone import get_backbone
 
 
 class DownstreamClassification(nn.Module):

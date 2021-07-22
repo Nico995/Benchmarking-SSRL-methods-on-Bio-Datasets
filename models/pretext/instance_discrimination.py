@@ -1,12 +1,10 @@
-import torch
-from torch import nn
-from torch.nn import Sequential, Linear, ReLU
-from .resnet_backbone import get_backbone
+import math
 
 import torch
-from torch.autograd import Function
 from torch import nn
-import math
+from torch.autograd import Function
+
+from models.resnet_backbone import get_backbone
 
 
 class LinearAverageOp(Function):

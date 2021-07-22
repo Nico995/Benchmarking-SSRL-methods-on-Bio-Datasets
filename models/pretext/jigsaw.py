@@ -1,29 +1,27 @@
 import torch
 from torch import nn
 from torch.nn import Sequential, Linear, ReLU
-from .resnet_backbone import get_backbone
-from torchvision.models import resnet
 
-'''
-The jigsaw task consists in predicting which of the 100 pseudo random permutations has been applied to a specific image.
-The backbone is used as a feature extractor, with some pre-defined latent space dimension. 
-Consequently, the resulting code is run through a classifier that predicts which one of the 100 permutation has been 
-applied to a given image (=> classifier output shape: [B, #_perm] )
-'''
+from ..resnet_backbone import get_backbone
 
 
 class Jigsaw(nn.Module):
+    """
+    Performs SSRL predicting Jigsaw permutation.
+    The jigsaw task consists in predicting which of the 100 pseudo random permutations has been applied to a specific image.
+    The backbone is used as a feature extractor, with some pre-defined latent space dimension.
+    Consequently, the resulting code is run through a classifier that predicts which one of the 100 permutation has been
+    applied to a given image
+    """
 
-    def __init__(self, num_classes=100, code_size=256, version='18', weights=None):
+    def __init__(self, num_classes, version='18', weights=None):
         super(Jigsaw, self).__init__()
-        # Backbone of jigsaw model
-        self.backbone = get_backbone(out_features=code_size, version=version, weights=weights)
 
-        # Classifier for jigsaw task
-        # The factor of 9 is because in the forward method we concatenate 9 batches
-        # Before feeding them to the classifier
+        self.backbone, self.backbone_features = get_backbone(version=version, weights=weights)
+
+        # The factor of 9 is because in the forward method we concatenate the 9 tiles b4 sending them to the classifier
         self.classifier = Sequential(
-            Linear(9 * code_size, 1024),
+            Linear(9 * self.backbone_features, 1024),
             ReLU(inplace=True),
             Linear(1024, num_classes))
 
