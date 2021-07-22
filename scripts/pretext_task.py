@@ -1,18 +1,11 @@
-import glob
 import os
 from datetime import datetime
 
-import torchvision
 from tensorboardX import SummaryWriter
-from torch.nn import CrossEntropyLoss
 from torch.optim import Adam, SGD
 from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import DataLoader
 
-from dataset import Kather
-from methods import train_supervised, val_supervised
-from models.downstream_classification import DownstreamClassification
-from models.supervised import Supervised
 from parser import load_args
 from utils import dataset_name, config as cf
 from utils.custom_exceptions import *

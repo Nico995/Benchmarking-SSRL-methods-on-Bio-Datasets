@@ -1,13 +1,12 @@
-import glob
 import os
 from datetime import datetime
 
 from tensorboardX import SummaryWriter
-from torch.optim import Adam, SGD
+from torch.optim import Adam
 from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import DataLoader
 
-from models.downstream_classification import DownstreamClassification
+from models.downstream.downstream_classification import DownstreamClassification
 from parser import load_args
 from utils import dataset_name, config as cf
 from utils.custom_exceptions import *
