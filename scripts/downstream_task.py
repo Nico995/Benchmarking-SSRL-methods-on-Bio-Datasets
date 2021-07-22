@@ -48,11 +48,8 @@ def main():
     try:
         num_classes = cf.classes_by_method[args.method]
         weights = cf.weights_by_method[args.method]
-        pretrained_model = cf.model_by_method[args.method](num_classes=num_classes, weights=weights)
 
-        # if downstream, we only need the backbone, DownstreamClassification will remove the last fc
-        # Layer and attach a new classification head by itself
-        model = DownstreamClassification(pretrained_model, method=args.method, num_classes=cf.classes_by_method['supervised'])
+        model = cf.model_by_method[args.method](num_classes=num_classes, weights=weights, mode="downstream")
 
         # Get training method
         train_ = cf.train_by_method['supervised']

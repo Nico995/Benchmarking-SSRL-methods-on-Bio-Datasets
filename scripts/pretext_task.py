@@ -44,7 +44,7 @@ def main():
     # if available
     try:
         num_classes = cf.classes_by_method[args.method]
-        model = cf.model_by_method[args.method](num_classes=num_classes, version=args.version)
+        model = cf.model_by_method[args.method](num_classes=num_classes, version=args.version, mode="pretext")
 
         # Get training method
         train_ = cf.train_by_method[args.method]

@@ -1,5 +1,6 @@
+import torch
 from torch import nn
-from torch.nn import ConvTranspose2d, ReLU, Sigmoid, Conv2d
+from torch.nn import ConvTranspose2d, ReLU, Sigmoid, Conv2d, Sequential, AdaptiveAvgPool1d, Linear
 
 
 class SmallEncoder(nn.Module):
@@ -52,12 +53,23 @@ class SmallDecoder(nn.Module):
 
 
 class AutoEncoder(nn.Module):
-    def __init__(self, num_classes, version='18', weights=None):
+    def __init__(self, num_classes, version='18', weights=None, mode="pretext"):
         super(AutoEncoder, self).__init__()
 
         self.backbone = SmallEncoder()
-        self.decoder = SmallDecoder()
+
+        # The naming of classifier for the decoder network is confusing, but
+        # needed to keep coherence throughout the classes. This could highly benefit
+        # from some quality-python inheritance-centered refactoring
+        if mode == "pretext":
+            self.classifier = SmallDecoder()
+        else:
+            # For downstream task, use a standard classifier and load pretrained weights
+            self.backbone = self.backbone.load_state_dict(torch.load(weights))
+            self.classifier = Sequential(
+                AdaptiveAvgPool1d((1, 1)),
+                Linear(in_features=self.backbone_features, out_features=num_classes))
 
     def forward(self, x):
         code = self.backbone(x)
-        return self.decoder(code)
+        return self.classifier(code)
