@@ -63,7 +63,7 @@ def main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_schedul
         # Validation Batch Loop
         dl_val_size = len(dl_val)
         for i, (img, lbl) in enumerate(dl_val):
-            with torch.set_grad_enabled(False):
+            with torch.no_grad():
                 loss, corr = val_(model, img, lbl, criterion)
 
             val_running_loss.append(loss)
