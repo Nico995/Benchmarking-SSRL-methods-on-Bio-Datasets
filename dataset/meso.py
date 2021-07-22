@@ -110,7 +110,7 @@ class MESO(torch.utils.data.Dataset):
         if self.get_indices:
             # TODO: Implement a way of getting a unique index that takes into account wrapping and random tiling
             NotImplementedError()
-            return -1
+            exit(-1)
             # return self.trans.get(self.mode, self.trans['val'])(tile), index
         else:
             return self.trans.get(self.mode, self.trans['val'])(tile), self.labels[wrapped_index]
