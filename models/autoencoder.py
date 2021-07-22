@@ -120,13 +120,14 @@ class AutoEncoder(nn.Module):
         self.backbone = SmallEncoder()
         self.decoder = SmallDecoder()
 
+        # If weights are required, it means we're training the downstream classifier
+        #
         if weights:
-            self.load_state_dict(torch.load(weights))
-            self.backbone = nn.Sequential(
-                self.backbone,
+            self.classifier = nn.Sequential(
                 Linear(37632, 1024),
                 Linear(1024, 512),
             )
+
         # print(self.backbone)
 
         # self.backbone = get_backbone(version=version, out_features=out_features)

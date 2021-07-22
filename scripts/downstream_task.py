@@ -53,7 +53,7 @@ def main():
 
         # if downstream, we only need the backbone, DownstreamClassification will remove the last fc
         # Layer and attach a new classification head by itself
-        model = DownstreamClassification(pretrained_model, num_classes=cf.classes_by_method['supervised'])
+        model = DownstreamClassification(pretrained_model, method=args.method, num_classes=cf.classes_by_method['supervised'])
 
         # Get training method
         train_ = cf.train_by_method['supervised']
@@ -64,7 +64,8 @@ def main():
 
     model = model.cuda()
     # Load optimizer
-    optimizer = SGD(filter(lambda param: param.requires_grad, model.parameters()), lr=args.lr, momentum=0.9)
+    # optimizer = SGD(filter(lambda param: param.requires_grad, model.parameters()), lr=args.lr, momentum=0.9)
+    optimizer = Adam(filter(lambda param: param.requires_grad, model.parameters()))
 
     # Load learning rate scheduler
     lr_scheduler = MultiStepLR(optimizer, [80, 100], 0.1)

@@ -1,9 +1,9 @@
 import glob
 import os
 
-from torch.nn import CrossEntropyLoss, MSELoss
+from torch.nn import CrossEntropyLoss, MSELoss, BCELoss
 
-from dataset import Kather, Pedestrians
+from dataset import Kather, Pedestrians, CRC, MESO
 from methods import train_rotation, val_rotation, train_jigsaw, val_jigsaw, train_autoencoder, val_autoencoder, \
     train_supervised, val_supervised
 from methods.instance_discrimination import train_instance_discrimination, val_instance_discrimination
@@ -26,16 +26,22 @@ args = load_args()
 dataset = {
     'kather': Kather,
     'pedestrians': Pedestrians,
+    'crc': CRC,
+    'meso': MESO,
 }
 
 image_extension_by_dataset = {
     'kather': 'tif',
-    'pedestrians': 'pgm'
+    'pedestrians': 'pgm',
+    'crc': 'svs',
+    'meso': 'ndpi',
 }
 
 classes_by_dataset = {
     'kather': 8,
-    'pedestrians': 2
+    'pedestrians': 2,
+    'crc': 9,
+    'meso': 3,
 }
 
 classes_by_method = {
@@ -71,7 +77,7 @@ val_by_method = {
 criterion_by_method = {
     'rotation': CrossEntropyLoss(),
     'jigsaw': CrossEntropyLoss(),
-    'autoencoder': MSELoss(),
+    'autoencoder': BCELoss(),
     'imagenet_pretrained': CrossEntropyLoss(),
     'random_initialization': CrossEntropyLoss(),
     'instance_discrimination': CrossEntropyLoss(),
@@ -90,7 +96,7 @@ model_by_method = {
 
 # This is the default weight path, weights are only needed when running downstream linear class. training
 default_weights_path = \
-    None if args.level == 'pretext' else os.path.join(f'./models/pretrained/', f'{dataset_name(args.data)}-{args.method}', 'latest.pth')
+    None if args.level == 'pretext' else os.path.join(f'../models/pretrained/', f'{dataset_name(args.data)}-{args.method}', 'latest.pth')
 
 # Since not every method requires pretrained weights
 # (e.g. random init doesn't need to run pretext training first), We only return for some methods

@@ -3,7 +3,10 @@ from os.path import join
 import numpy as np
 import torch
 import tqdm
+from torch.nn import Sequential
 
+from torchvision.transforms import ToPILImage
+import matplotlib.pyplot as plt
 
 def main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_scheduler, criterion, writer,
               checkpoint_folder):
@@ -16,6 +19,8 @@ def main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_schedul
     """
     best_acc = 0
     # Training Epoch Loop
+
+    np.random.seed(42)
     for epoch in range(args.epochs):
 
         # Epoch progress bar
@@ -28,9 +33,12 @@ def main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_schedul
         model.train()
         # Training Batch loop
         dl_train_size = len(dl_train)
+
         for i, (img, lbl) in enumerate(dl_train):
+
             # with torch.set_grad_enabled(True):
             loss, corr = train_(model, img, lbl, optimizer, criterion)
+
             # Update progress bar
             tq.update(args.train_batch_size)
             tq.set_postfix({'train_loss': f'{loss:6f}', 'train_acc': f'{(corr / args.train_batch_size):.6f}'})
@@ -41,7 +49,8 @@ def main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_schedul
             writer.add_scalar('training_acc', corr / args.train_batch_size, epoch * args.train_batch_size + i)
 
         # Update learning rate
-        lr_scheduler.step()
+        if args.optimizer != "Adam":
+            lr_scheduler.step()
 
         # Close batch progress bar
         writer.add_scalar('epoch_loss', np.mean(train_running_loss), epoch)
@@ -73,10 +82,10 @@ def main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_schedul
 
         # Save checkpoints
         new_acc = val_running_corr / (args.val_batch_size * dl_val_size)
-        # if new_acc > best_acc:
-        #     best_acc = new_acc
-        #     torch.save(Sequential(*list(model.backbone.children())[:-1]).state_dict(),
-        #                join(args.checkpoint_path, checkpoint_folder, f'best.pth'))
+        if new_acc > best_acc:
+            best_acc = new_acc
+            torch.save(Sequential(*list(model.backbone.children())[:-1]).state_dict(),
+                       join(args.checkpoint_path, checkpoint_folder, f'best.pth'))
 
         torch.save(model.state_dict(), join(args.checkpoint_path, checkpoint_folder, f'latest.pth'))
 
