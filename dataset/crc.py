@@ -11,7 +11,7 @@ from torchvision.transforms import Compose, ToTensor, Normalize
 
 class CRC(torch.utils.data.Dataset):
 
-    def __init__(self, args, mode='train', ext='svs', get_indices=False, zoom_level=200):
+    def __init__(self, args, mode='train', ext='svs', get_indices=False, zoom_level=200, oversample=True):
         super(CRC, self).__init__()
 
         self.data = args.data
@@ -47,8 +47,10 @@ class CRC(torch.utils.data.Dataset):
         }
 
     def __getitem__(self, index):
+        wrapped_index = index % len(self.images)
+
         # Open the whole-slide file
-        slide = OpenSlide(self.images[index])
+        slide = OpenSlide(self.images[wrapped_index])
 
         # Initialize a deepzoom object witht he size of the desired tile (tile_size+2*overlap should be a power of 2)
         data_gen = DeepZoomGenerator(slide, tile_size=224, overlap=0, limit_bounds=True)
@@ -73,8 +75,14 @@ class CRC(torch.utils.data.Dataset):
         # tile = torch.tensor(tile)
 
         if self.get_indices:
-            return self.trans.get(self.mode, self.trans['val'])(tile), index
-        return self.trans.get(self.mode, self.trans['val'])(tile), self.labels[index]
+            NotImplementedError()
+            exit(-1)
+            # return self.trans.get(self.mode, self.trans['val'])(tile), wrapped_index
+        return self.trans.get(self.mode, self.trans['val'])(tile), self.labels[wrapped_index]
 
     def __len__(self):
-        return len(self.images)
+        if self.oversample:
+            return self.batch_size
+
+        else:
+            return len(self.images)
