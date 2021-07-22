@@ -20,8 +20,10 @@ class CRC(torch.utils.data.Dataset):
         self.get_indices = get_indices
         self.zoom_level = zoom_level
 
+        self.batch_size = args.train_batch_size
         self.rescale_size = args.rescale_size
         self.crop_size = args.crop_size
+        self.oversample = oversample
 
         self.images = []
         self.labels = []
