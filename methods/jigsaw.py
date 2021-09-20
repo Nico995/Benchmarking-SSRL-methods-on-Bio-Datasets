@@ -23,7 +23,7 @@ tile_params = {
 tiles_start = [i*tile_params['space'] + tile_params['offset'] for i in range(3)]
 
 # 'Good' permutations
-precomputed_permutations = np.load('../data/permutations/naroozi_perms_100_patches_9_max.npy')
+precomputed_permutations = np.load('../data/permutations/100_perms_9_tiles.npy')
 
 
 def scramble(tiles):
@@ -125,7 +125,6 @@ def train_jigsaw(model, img, lbl, optimizer, criterion):
 
 
 def val_jigsaw(model, img, lbl, criterion):
-    return -1, -1
     model.eval()
 
     with torch.no_grad():
@@ -140,7 +139,6 @@ def val_jigsaw(model, img, lbl, criterion):
 
         # Compute loss & metrics
         loss = criterion(out, permutations)
+        corr = corrects(out, permutations)
 
-        acc = accuracy(out, permutations)
-
-    return loss.item(), acc.item()
+    return loss.item(), corr.item()

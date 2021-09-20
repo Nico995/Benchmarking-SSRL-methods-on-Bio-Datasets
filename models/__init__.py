@@ -1,3 +1,3 @@
 from models.pretext import *
 from models.downstream import *
-from models.classic import *
+from models.baseline import *

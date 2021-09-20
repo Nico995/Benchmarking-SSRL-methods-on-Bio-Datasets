@@ -11,6 +11,7 @@ from utils import dataset_name, config as cf
 from utils.custom_exceptions import *
 
 from scripts import main_loop
+import json
 
 ''' 
 Since this project focuses on benchmarking different training methods and different dataset, we need modularity. 
@@ -58,9 +59,9 @@ def main():
 
     # Load optimizer
     if args.optimizer == "SGD":
-        optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.9)
+        optimizer = SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
     elif args.optimizer == "Adam":
-        optimizer = Adam(model.parameters())
+        optimizer = Adam(model.parameters(), weight_decay=args.weight_decay)
     else:
         NotImplementedError()
 
@@ -70,14 +71,18 @@ def main():
     # Create folder to save checkpoints
     checkpoint_folder = f"{args.level}-{dataset_name(args.data)}-{args.method}_" + \
                         datetime.now().strftime(f"%Y-%m-%d_%H:%M:%S")
-    os.makedirs(os.path.join(args.checkpoint_path, checkpoint_folder), exist_ok=True)
-    print("saving data at ", os.path.join(args.checkpoint_path, checkpoint_folder))
+    logdir = os.path.join(args.checkpoint_path, checkpoint_folder)
+    os.makedirs(logdir, exist_ok=True)
+    print("saving data at ", logdir)
+
+    with open(os.path.join(logdir, 'run_config.json'), 'w') as fp:
+        json.dump(vars(args), fp)
 
     # Tensorboard writer
     # writer = SummaryWriter(comment=f'_{args.method}_{args.epochs}ep_{args.batch_size}bs_{args.data.split("/")[-2]}')
-    writer = SummaryWriter(logdir=os.path.join(args.checkpoint_path, checkpoint_folder))
+    writer = SummaryWriter(logdir=logdir)
 
-    main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_scheduler, criterion, writer, checkpoint_folder)
+    main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_scheduler, criterion, writer, logdir)
 
 
 if __name__ == '__main__':

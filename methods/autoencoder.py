@@ -36,6 +36,7 @@ def train_autoencoder(model, img, lbl, optimizer, criterion):
     # Compute parameter's gradient
     loss.backward()
 
+
     # Back-propagate and update parameters
     optimizer.step()
 

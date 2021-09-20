@@ -31,6 +31,7 @@ class CRC(torch.utils.data.Dataset):
         # Load images and labels (according to self.mode.upper() being [TRAIN/TEST/VAL])
         for subdir in glob(join(self.data, f'*_{self.mode.upper()}')):
             label = int(subdir.split('/')[-1].split('_')[0][-1])
+
             images_files = glob(join(subdir, f"*.{self.ext}"))
 
             self.images.extend(images_files)

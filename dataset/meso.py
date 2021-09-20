@@ -1,19 +1,17 @@
+import xml.etree.ElementTree as et
 from glob import glob
 from os.path import join
-from os import getcwd
-import xml.etree.ElementTree as et
+
 import numpy as np
 import torch.nn
-from matplotlib import pyplot as plt
 from openslide import OpenSlide
-from openslide.deepzoom import DeepZoomGenerator
 from torch.utils.data import DataLoader
-from torchvision.transforms import Compose, ToTensor, Normalize
+from torchvision.transforms import Compose, ToTensor
 
 
 class MESO(torch.utils.data.Dataset):
 
-    def __init__(self, args, mode='train', ext='svs', get_indices=False, zoom_level=200, oversample=True):
+    def __init__(self, args, mode='train', ext='svs', get_indices=False, zoom_level=200, oversample=True, fix_tiles=True):
         super(MESO, self).__init__()
 
         self.data = args.data
@@ -22,8 +20,9 @@ class MESO(torch.utils.data.Dataset):
         self.get_indices = get_indices
         self.zoom_level = zoom_level
         self.oversample = oversample
+        self.fix_tiles = fix_tiles
         self.batch_size = args.train_batch_size
-        self.tile_size = args.crop_size  # correct wrong naming "crop" to "tile"
+        self.tile_size = args.crop_size  # TODO: correct wrong naming "crop" to "tile"
 
         self.rescale_size = args.rescale_size
         self.crop_size = args.crop_size
@@ -44,6 +43,12 @@ class MESO(torch.utils.data.Dataset):
         self.images = sorted(self.images)
         self.labels = sorted(self.labels)
         self.xmls = sorted(self.xmls)
+
+        # If we want always the same tiles from the image, then build a pseudo random vector of crop of seeds
+        # To be applied before extracting a random crop from a wsi
+        if self.fix_tiles:
+            self.tile_seeds = np.random.randint(self.__len__(), size=self.__len__())
+
         # initialize data transformations
         self.trans = {
             'train': Compose([
@@ -57,7 +62,6 @@ class MESO(torch.utils.data.Dataset):
         }
 
     def __getitem__(self, index):
-
         wrapped_index = index % len(self.images)
 
         # Parse the xml file and get the list of annotations as the first element of the root
@@ -86,6 +90,9 @@ class MESO(torch.utils.data.Dataset):
         zoom_level = 0
 
         # Get random ROI
+        if self.fix_tiles:
+            np.random.seed(self.tile_seeds[index])
+
         roi_idx = np.random.choice(len(bboxes))
         roi = bboxes[roi_idx]
 
@@ -109,15 +116,13 @@ class MESO(torch.utils.data.Dataset):
 
         if self.get_indices:
             # TODO: Implement a way of getting a unique index that takes into account wrapping and random tiling
-            NotImplementedError()
-            exit(-1)
-            # return self.trans.get(self.mode, self.trans['val'])(tile), index
+            return self.trans.get(self.mode, self.trans['val'])(tile), index
         else:
             return self.trans.get(self.mode, self.trans['val'])(tile), self.labels[wrapped_index]
+            # return self.trans.get(self.mode, self.trans['val'])(tile), self.labels[wrapped_index], index
 
     def __len__(self):
         if self.oversample:
-            return self.batch_size
-
+            return self.batch_size * 10
         else:
             return len(self.images)

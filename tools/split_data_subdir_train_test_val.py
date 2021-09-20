@@ -28,8 +28,6 @@ def main():
     parser.add_argument('--data', type=str, default='../data/kather/', help='data path')
     args = parser.parse_args()
 
-    random.seed(42)
-
     for subdir in glob(join(args.data, "*")):
         # Create train test and val subdirs
         subdir_name = subdir.split('/')[-1]

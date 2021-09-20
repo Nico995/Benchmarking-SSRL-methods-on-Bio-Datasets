@@ -1,8 +1,10 @@
+import json
 import os
 from datetime import datetime
 
+import torch
 from tensorboardX import SummaryWriter
-from torch.optim import Adam
+from torch.optim import Adam, SGD
 from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import DataLoader
 
@@ -34,6 +36,8 @@ def main():
     # Initialize data_loader structures
     try:
         ext = cf.image_extension_by_dataset[dataset_name(args.data)]
+        num_classes = cf.classes_by_dataset[dataset_name(args.data)]
+
         ds_train = cf.dataset[dataset_name(args.data)](args, ext=ext,
                                                        get_indices=args.method == 'instance_discrimination')
         ds_val = cf.dataset[dataset_name(args.data)](args, mode='val', ext=ext,
@@ -46,7 +50,6 @@ def main():
 
     # if available
     try:
-        num_classes = cf.classes_by_method[args.method]
         weights = cf.weights_by_method[args.method]
 
         model = cf.model_by_method[args.method](num_classes=num_classes, weights=weights, mode="downstream")
@@ -59,9 +62,19 @@ def main():
         raise MethodNotSupportedError(args.method)
 
     model = model.cuda()
+
+    # freeze backbone
+    for param in model.backbone.parameters():
+        param.requires_grad = False
+
     # Load optimizer
-    # optimizer = SGD(filter(lambda param: param.requires_grad, model.parameters()), lr=args.lr, momentum=0.9)
-    optimizer = Adam(filter(lambda param: param.requires_grad, model.parameters()))
+    if args.optimizer == "SGD":
+        optimizer = SGD(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr, momentum=0.9)
+    elif args.optimizer == "Adam":
+        optimizer = Adam(filter(lambda p: p.requires_grad, model.parameters())
+                         )
+    else:
+        NotImplementedError()
 
     # Load learning rate scheduler
     lr_scheduler = MultiStepLR(optimizer, [80, 100], 0.1)
@@ -69,14 +82,18 @@ def main():
     # Create folder to save checkpoints
     checkpoint_folder = f"{args.level}-{dataset_name(args.data)}-{args.method}_" + \
                         datetime.now().strftime(f"%Y-%m-%d_%H:%M:%S")
-    os.makedirs(os.path.join(args.checkpoint_path, checkpoint_folder), exist_ok=True)
+    logdir = os.path.join(args.checkpoint_path, checkpoint_folder)
+    os.makedirs(logdir, exist_ok=True)
+    print("saving data at ", logdir)
+
+    with open(os.path.join(logdir, 'run_config.json'), 'w') as fp:
+        json.dump(vars(args), fp)
 
     # Tensorboard writer
     # writer = SummaryWriter(comment=f'_{args.method}_{args.epochs}ep_{args.batch_size}bs_{args.data.split("/")[-2]}')
-    writer = SummaryWriter(logdir=os.path.join(args.checkpoint_path, checkpoint_folder))
+    writer = SummaryWriter(logdir=logdir)
 
-    main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_scheduler, criterion, writer,
-              checkpoint_folder)
+    main_loop(args, model, train_, val_, dl_train, dl_val, optimizer, lr_scheduler, criterion, writer, logdir)
 
 
 if __name__ == '__main__':

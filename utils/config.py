@@ -5,8 +5,10 @@ from torch.nn import CrossEntropyLoss, BCELoss
 from dataset import Kather, Pedestrians, CRC, MESO
 from methods import train_rotation, val_rotation, train_jigsaw, val_jigsaw, train_autoencoder, val_autoencoder, \
     train_supervised, val_supervised, train_instance_discrimination, val_instance_discrimination
+from methods.gan import train_gan, val_gan
 from models import Rotation, Jigsaw, AutoEncoder, ImagenetPretrained, RandomInitialization, InstanceDiscrimination, \
     Supervised
+from models.pretext.gan import GAN
 from parser import load_args
 from utils import dataset_name
 
@@ -38,13 +40,14 @@ classes_by_dataset = {
     'kather': 8,
     'pedestrians': 2,
     'crc': 9,
-    'meso': 3,
+    'meso': 2,
 }
 
 classes_by_method = {
     'rotation': 4,
     'jigsaw': 100,
     'autoencoder': 8,
+    'gan': 2,
     'imagenet_pretrained': classes_by_dataset[dataset_name(args.data)],
     'random_initialization': classes_by_dataset[dataset_name(args.data)],
     'instance_discrimination': [128, 3000],
@@ -55,6 +58,7 @@ train_by_method = {
     'rotation': train_rotation,
     'jigsaw': train_jigsaw,
     'autoencoder': train_autoencoder,
+    'gan': train_gan,
     'imagenet_pretrained': train_supervised,
     'random_initialization': train_supervised,
     'instance_discrimination': train_instance_discrimination,
@@ -65,6 +69,7 @@ val_by_method = {
     'rotation': val_rotation,
     'jigsaw': val_jigsaw,
     'autoencoder': val_autoencoder,
+    'gan': val_gan,
     'imagenet_pretrained': val_supervised,
     'random_initialization': val_supervised,
     'instance_discrimination': val_instance_discrimination,
@@ -75,6 +80,7 @@ criterion_by_method = {
     'rotation': CrossEntropyLoss(),
     'jigsaw': CrossEntropyLoss(),
     'autoencoder': BCELoss(),
+    'gan': CrossEntropyLoss(),
     'imagenet_pretrained': CrossEntropyLoss(),
     'random_initialization': CrossEntropyLoss(),
     'instance_discrimination': CrossEntropyLoss(),
@@ -85,6 +91,7 @@ model_by_method = {
     'rotation': Rotation,
     'jigsaw': Jigsaw,
     'autoencoder': AutoEncoder,
+    'gan': GAN,
     'imagenet_pretrained': ImagenetPretrained,
     'random_initialization': RandomInitialization,
     'instance_discrimination': InstanceDiscrimination,
@@ -102,6 +109,7 @@ weights_by_method = {
     'rotation': default_weights_path,
     'jigsaw': default_weights_path,
     'autoencoder': default_weights_path,
+    'gan': default_weights_path,
     'imagenet_pretrained': None,
     'random_initialization': None,
     'instance_discrimination': default_weights_path,

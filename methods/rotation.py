@@ -1,7 +1,7 @@
 import torch
 
 from transforms import DiscreteRandomRotation
-from utils.metrics import accuracy
+from utils.metrics import accuracy, corrects
 
 
 def train_rotation(model, img, lbl, optimizer, criterion):
@@ -24,7 +24,7 @@ def train_rotation(model, img, lbl, optimizer, criterion):
 
     # Compute loss & metrics
     loss = criterion(out, angle)
-    acc = accuracy(out, angle)
+    corr = corrects(out, angle)
 
     # Compute parameter's gradient
     loss.backward()
@@ -32,7 +32,7 @@ def train_rotation(model, img, lbl, optimizer, criterion):
     # Back-propagate and update parameters
     optimizer.step()
 
-    return loss.item(), acc.item()
+    return loss.item(), corr.item()
 
 
 def val_rotation(model, img, lbl, criterion):
@@ -53,6 +53,6 @@ def val_rotation(model, img, lbl, criterion):
 
         # Compute loss & metrics
         loss = criterion(out, angle)
-        acc = accuracy(out, angle)
+        corr = corrects(out, angle)
 
-    return loss.item(), acc.item()
+    return loss.item(), corr.item()
