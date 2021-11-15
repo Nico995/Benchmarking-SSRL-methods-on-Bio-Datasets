@@ -220,3 +220,6 @@ venv.bak/
 # Support for Project snippet scope
 !.vscode/*.code-snippets
 
+### My own directories
+# Logs
+logs
